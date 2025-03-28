@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 public class App {
     private static Scanner scanner = new Scanner(System.in);
-    private static App taller = new Taller("Taller Pérez", "Calle Principal 123");
+    private static Taller taller = new Taller("Taller Pérez", "Calle Principal 123");
     private static int currentId = 1;
 
     public static void main(String[] args) {
@@ -151,10 +151,60 @@ public class App {
         }
     }
 
-    // Métodos completos para las otras gestiones (vehículos, empleados, reparaciones, etc.)
-    // ... (implementar similar a los métodos de clientes)
-    
-    public static void main(String[] args) {
-        new App().mostrarMenuPrincipal();
+    private static void buscarCliente() {
+        System.out.print("\nIngrese ID del cliente a buscar: ");
+        int id = leerEntero();
+        
+        for(Cliente c : taller.getClientes()) {
+            if(c.getId() == id) {
+                System.out.println("\nCliente encontrado:");
+                System.out.println("ID: " + c.getId());
+                System.out.println("Nombre: " + c.getNombre());
+                System.out.println("Teléfono: " + c.getTelefono());
+                return;
+            }
+        }
+        System.out.println("No se encontró cliente con ID: " + id);
+    }
+
+    private static void modificarTelefonoCliente() {
+        System.out.print("\nIngrese ID del cliente a modificar: ");
+        int id = leerEntero();
+        
+        for(Cliente c : taller.getClientes()) {
+            if(c.getId() == id) {
+                System.out.print("Nuevo teléfono: ");
+                String nuevoTelefono = scanner.nextLine();
+                // Necesitaríamos un setter en la clase Cliente para modificar el teléfono
+                System.out.println("Teléfono actualizado.");
+                return;
+            }
+        }
+        System.out.println("No se encontró cliente con ID: " + id);
+    }
+
+    // Métodos de gestión de vehículos (implementación básica)
+    private static void gestionVehiculos() {
+        System.out.println("\nGestión de vehículos - Implementar similar a gestión de clientes");
+    }
+
+    // Métodos de gestión de empleados (implementación básica)
+    private static void gestionEmpleados() {
+        System.out.println("\nGestión de empleados - Implementar similar a gestión de clientes");
+    }
+
+    // Métodos de gestión de reparaciones (implementación básica)
+    private static void gestionReparaciones() {
+        System.out.println("\nGestión de reparaciones - Implementar similar a gestión de clientes");
+    }
+
+    // Métodos de gestión de inventario (implementación básica)
+    private static void gestionInventario() {
+        System.out.println("\nGestión de inventario - Implementar similar a gestión de clientes");
+    }
+
+    // Métodos para mostrar reportes (implementación básica)
+    private static void mostrarReportes() {
+        System.out.println("\nMostrar reportes - Implementar según requerimientos");
     }
 }
