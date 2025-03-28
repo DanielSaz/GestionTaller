@@ -22,4 +22,15 @@ public class Cliente {
     public String getNombre() { return nombre; }
     public String getTelefono() { return telefono; }
     public ArrayList<Vehiculo> getVehiculos() { return vehiculos; }
+
+     // Setters añadidos para permitir modificaciones
+     public void setNombre(String nombre) { 
+        this.nombre = nombre; 
+    }
+    public void setTelefono(String telefono) {
+        // Validación del teléfono
+        if(telefono != null && !telefono.trim().isEmpty()) {
+            this.telefono = telefono;
+        }
+    }
 }

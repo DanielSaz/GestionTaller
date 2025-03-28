@@ -183,16 +183,122 @@ public class App {
         System.out.println("No se encontró cliente con ID: " + id);
     }
 
-    // Métodos de gestión de vehículos (implementación básica)
+    // Método de gestión de vehículos 
     private static void gestionVehiculos() {
-        System.out.println("\nGestión de vehículos - Implementar similar a gestión de clientes");
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE VEHÍCULOS ===");
+            System.out.println("1. Registrar nuevo vehículo");
+            System.out.println("2. Listar todos los vehículos");
+            System.out.println("3. Buscar vehículo por matrícula");
+            System.out.println("4. Asignar vehículo a cliente");
+            System.out.println("0. Volver al menú principal");
+            System.out.print("Seleccione: ");
+            
+            opcion = leerEntero();
+            
+            switch(opcion) {
+                case 1: registrarVehiculo(); break;
+                case 2: listarVehiculos(); break;
+                case 3: buscarVehiculo(); break;
+                case 4: asignarVehiculoACliente(); break;
+                case 0: break;
+                default: System.out.println("Opción no válida.");
+            }
+        } while(opcion != 0);
     }
 
-    // Métodos de gestión de empleados (implementación básica)
+    // Metodo para registrar un nuevo vehiculo
+    private static void registrarVehiculo(){
+        System.out.println("\n--- REGISTRO DE VEHÍCULO ---");
+        
+        // Validación de matrícula
+        String matricula;
+        do {
+            System.out.print("Matrícula (6-8 caracteres): ");
+            matricula = scanner.nextLine().trim();
+        } while(matricula.length() < 6 || matricula.length() > 8);
+        
+        System.out.print("Marca: ");
+        String marca = scanner.nextLine();
+        
+        System.out.print("Modelo: ");
+        String modelo = scanner.nextLine();
+        
+        // Mostrar clientes para selección
+        listarClientes();
+        System.out.print("ID del propietario: ");
+        int idPropietario = leerEntero();
+        
+        Cliente propietario = buscarClientePorId(idPropietario);
+        if(propietario == null) {
+            System.out.println("Cliente no encontrado");
+            return;
+        }
+        
+        Vehiculo nuevoVehiculo = new Vehiculo(matricula, marca, modelo, propietario);
+        taller.agregarVehiculo(nuevoVehiculo);
+        propietario.agregarVehiculo(nuevoVehiculo);
+        System.out.println("Vehículo registrado correctamente");
+    }
+    //Metodo para buscar Cliente por ID
+    private static Cliente buscarClientePorId(int id) {
+        for(Cliente c : taller.getClientes()) {
+            if(c.getId() == id) {
+                return c;
+            }
+        }
+        return null;
+    }
+      
+    
+
+    // Métodos de gestión de empleados 
     private static void gestionEmpleados() {
-        System.out.println("\nGestión de empleados - Implementar similar a gestión de clientes");
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE EMPLEADOS ===");
+            System.out.println("1. Registrar nuevo empleado");
+            System.out.println("2. Listar todos los empleados");
+            System.out.println("3. Buscar empleado por ID");
+            System.out.println("4. Modificar datos de empleado");
+            System.out.println("0. Volver al menú principal");
+            System.out.print("Seleccione: ");
+            
+            opcion = leerEntero();
+            
+            switch(opcion) {
+                case 1: registrarEmpleado(); break;
+                case 2: listarEmpleados(); break;
+                case 3: buscarEmpleado(); break;
+                case 4: modificarEmpleado(); break;
+                case 0: break;
+                default: System.out.println("Opción no válida.");
+            }
+        } while(opcion != 0);
     }
-
+    private static void registrarEmpleado() {
+        System.out.println("\n--- REGISTRO DE EMPLEADO ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Puesto: ");
+        String puesto = scanner.nextLine();
+        
+        System.out.print("¿Es mecánico? (s/n): ");
+        String esMecanico = scanner.nextLine().toLowerCase();
+        
+        if(esMecanico.equals("s")) {
+            System.out.print("Especialidad: ");
+            String especialidad = scanner.nextLine();
+            Mecanico nuevoMecanico = new Mecanico(nextId(), nombre, puesto, especialidad);
+            taller.agregarEmpleado(nuevoMecanico);
+        } else {
+            Empleado nuevoEmpleado = new Empleado(nextId(), nombre, puesto);
+            taller.agregarEmpleado(nuevoEmpleado);
+        }
+        System.out.println("Empleado registrado con éxito");
+    }
     // Métodos de gestión de reparaciones (implementación básica)
     private static void gestionReparaciones() {
         System.out.println("\nGestión de reparaciones - Implementar similar a gestión de clientes");
