@@ -7,42 +7,7 @@ public class App {
     private static int currentId = 1;
 
     public static void main(String[] args) {
-        cargarDatosEjemplo();
         mostrarMenuPrincipal();
-    }
-
-    private static void cargarDatosEjemplo() {
-        // Clientes de ejemplo
-        Cliente cliente1 = new Cliente(nextId(), "Juan Martínez", "600111222");
-        Cliente cliente2 = new Cliente(nextId(), "María López", "600333444");
-        taller.agregarCliente(cliente1);
-        taller.agregarCliente(cliente2);
-        
-        // Vehículos de ejemplo
-        Vehiculo vehiculo1 = new Vehiculo("ABC123", "Toyota", "Corolla", cliente1);
-        Vehiculo vehiculo2 = new Vehiculo("XYZ789", "Renault", "Clio", cliente2);
-        cliente1.agregarVehiculo(vehiculo1);
-        cliente2.agregarVehiculo(vehiculo2);
-        taller.agregarVehiculo(vehiculo1);
-        taller.agregarVehiculo(vehiculo2);
-        
-        // Empleados de ejemplo
-        Mecanico mecanico1 = new Mecanico(nextId(), "Carlos Gómez", "Mecánico", "Motor");
-        Mecanico mecanico2 = new Mecanico(nextId(), "Ana Ruiz", "Mecánico", "Electricidad");
-        taller.agregarEmpleado(mecanico1);
-        taller.agregarEmpleado(mecanico2);
-        
-        // Piezas de ejemplo
-        Proveedor proveedor1 = new Proveedor(nextId(), "Autopartes S.L.", "900100200");
-        Pieza pieza1 = new Pieza(nextId(), "Filtro de aceite", 15.99, 50, proveedor1);
-        Pieza pieza2 = new Pieza(nextId(), "Pastillas de freno", 45.50, 30, proveedor1);
-        taller.agregarPieza(pieza1);
-        taller.agregarPieza(pieza2);
-        
-        // Reparaciones de ejemplo
-        Reparacion reparacion1 = new Reparacion(nextId(), vehiculo1, mecanico1, "Cambio de aceite", 50.0, "15/03/2023");
-        reparacion1.agregarPieza(pieza1);
-        vehiculo1.agregarReparacion(reparacion1);
     }
 
     private static int nextId() {
@@ -150,7 +115,7 @@ public class App {
                              " | Tel: " + c.getTelefono() + " | Vehículos: " + c.getVehiculos().size());
         }
     }
-
+    //Metodo para buscar un cliente 
     private static void buscarCliente() {
         System.out.print("\nIngrese ID del cliente a buscar: ");
         int id = leerEntero();
@@ -182,6 +147,8 @@ public class App {
         }
         System.out.println("No se encontró cliente con ID: " + id);
     }
+
+
 
     // Método de gestión de vehículos 
     private static void gestionVehiculos() {
@@ -235,12 +202,15 @@ public class App {
             System.out.println("Cliente no encontrado");
             return;
         }
-        
+        // Crear y registrar el vehículo
         Vehiculo nuevoVehiculo = new Vehiculo(matricula, marca, modelo, propietario);
         taller.agregarVehiculo(nuevoVehiculo);
         propietario.agregarVehiculo(nuevoVehiculo);
         System.out.println("Vehículo registrado correctamente");
+        System.out.println("Matrícula: " + matricula);
+        System.out.println("Propietario: " + propietario.getNombre());
     }
+
     //Metodo para buscar Cliente por ID
     private static Cliente buscarClientePorId(int id) {
         for(Cliente c : taller.getClientes()) {
@@ -250,9 +220,70 @@ public class App {
         }
         return null;
     }
-      
     
+    //Metodo para listar los vehiculos
+    private static void listarVehiculos() {
+        ArrayList<Vehiculo> vehiculos = taller.getVehiculos();
+        if(vehiculos.isEmpty()) {
+            System.out.println("\nNo hay vehículos registrados.");
+            return;
+        }
+        
+        System.out.println("\n--- LISTADO DE VEHÍCULOS ---");
+        // Imprimir los títulos de las columnas con formato:
+        // %-10s = Matrícula (10 caracteres de ancho, alineado a izquierda)
+        // %-15s = Marca (15 caracteres de ancho, alineado a izquierda)
+        // %-15s = Modelo (15 caracteres de ancho, alineado a izquierda)
+        // %-20s = Propietario (20 caracteres de ancho, alineado a izquierda)
+        System.out.printf("%-10s %-15s %-15s %-20s%n", "Matrícula", "Marca", "Modelo", "Propietario");
+        System.out.println("--------------------------------------------------");
+        
+        for(Vehiculo carros : vehiculos) {
+            System.out.printf("%-10s %-15s %-15s %-20s%n",
+                carros.getMatricula(),
+                carros.getMarca(),
+                carros.getModelo(),
+                carros.getPropietario().getNombre());
+        }
+        System.out.println("Total vehículos: " + vehiculos.size());
+    }
 
+    //Metodo para buschar coche por la matricula 
+    private static void buscarVehiculo() {
+        System.out.print("\nIngrese matrícula del vehículo: ");
+        String matricula = scanner.nextLine().trim().toUpperCase();
+       // Lee la entrada del usuario, elimina espacios en blanco al inicio/fin y convierte a mayúsculas
+
+        Vehiculo vehiculo = buscarVehiculoPorMatricula(matricula);
+        if(vehiculo == null) {
+            System.out.println("No se encontró vehículo con matrícula: " + matricula);
+            return;
+        }
+        
+        System.out.println("\n--- DATOS DEL VEHÍCULO ---");
+        System.out.println("Matrícula: " + vehiculo.getMatricula());
+        System.out.println("Marca: " + vehiculo.getMarca());
+        System.out.println("Modelo: " + vehiculo.getModelo());
+        System.out.println("Propietario: " + vehiculo.getPropietario().getNombre());
+        System.out.println("Teléfono propietario: " + vehiculo.getPropietario().getTelefono());
+        System.out.println("Reparaciones realizadas: " + vehiculo.getHistorialReparaciones().size());
+    }
+    //Metodo para buscar un vehiculo por la matricula
+    private static Vehiculo buscarVehiculoPorMatricula(String matricula) {
+
+        for(Vehiculo carro : taller.getVehiculos()) {
+            // Comparar la matrícula (ignorando mayúsculas/minúsculas)
+            if(carro.getMatricula().equalsIgnoreCase(matricula)) {
+                return carro; 
+            }
+        }
+        return null; 
+    }
+
+
+
+    
+    
     // Métodos de gestión de empleados 
     private static void gestionEmpleados() {
         int opcion;
@@ -277,6 +308,8 @@ public class App {
             }
         } while(opcion != 0);
     }
+
+    // Metodo para registrar el empleado
     private static void registrarEmpleado() {
         System.out.println("\n--- REGISTRO DE EMPLEADO ---");
         System.out.print("Nombre: ");
@@ -299,6 +332,10 @@ public class App {
         }
         System.out.println("Empleado registrado con éxito");
     }
+
+    
+
+    
     // Métodos de gestión de reparaciones (implementación básica)
     private static void gestionReparaciones() {
         System.out.println("\nGestión de reparaciones - Implementar similar a gestión de clientes");

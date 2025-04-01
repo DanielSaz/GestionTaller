@@ -16,7 +16,9 @@ public class Vehiculo {
     }
 
     public void agregarReparacion(Reparacion reparacion) {
-        historialReparaciones.add(reparacion);
+        if(reparacion != null) {
+            historialReparaciones.add(reparacion);
+        }
     }
 
     // Getters
