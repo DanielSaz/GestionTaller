@@ -151,6 +151,7 @@ public class App {
 
 
 
+
     // Método de gestión de vehículos 
     private static void gestionVehiculos() {
         int opcion;
@@ -316,6 +317,7 @@ public class App {
                         " (" + vehiculo.getMatricula() + ")");
     }
 
+    
     
     
     // Métodos de gestión de empleados 
@@ -678,13 +680,32 @@ public class App {
     }
 
     //Metodo para finalizar reparacion 
-    
+    private static void finalizarReparacion() {
+        System.out.print("\nIngrese ID de reparación a finalizar: ");
+        int id = leerEntero();  
+        Reparacion reparacion = buscarReparacionPorId(id);  // Buscar reparación
+        
+        if(reparacion == null) {  
+            System.out.println("Reparación no encontrada");
+            return;
+        }
+        System.out.println("\nReparación finalizada correctamente");
+        System.out.println("Vehículo: " + reparacion.getVehiculo().getMatricula());
+        System.out.println("Costo total: " + reparacion.getCosto() + "€");
+        System.out.println("Piezas utilizadas: " + reparacion.getPiezasUsadas().size());
+    }    
 
 
-    // Métodos de gestión de inventario (implementación básica)
+
+
+    // Métodos de gestión de inventario 
     private static void gestionInventario() {
         System.out.println("\nGestión de inventario - Implementar similar a gestión de clientes");
     }
+
+
+
+
 
     // Métodos para mostrar reportes (implementación básica)
     private static void mostrarReportes() {
