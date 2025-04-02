@@ -19,4 +19,10 @@ public class Pieza {
     public double getPrecio() { return precio; }
     public int getCantidadStock() { return cantidadStock; }
     public Proveedor getProveedor() { return proveedor; }
+
+
+    //Setters
+    public void setCantidadStock(int cantidadStock) {
+        this.cantidadStock = cantidadStock;
+    }
 }

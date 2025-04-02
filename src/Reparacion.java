@@ -32,4 +32,13 @@ public class Reparacion {
     public double getCosto() { return costo; }
     public String getFecha() { return fecha; }
     public ArrayList<Pieza> getPiezasUsadas() { return piezasUsadas; }
+
+
+    public void setCosto(double costo){
+        if(costo >=0 ){
+            this.costo = costo;
+    }else {
+        System.out.println("El costo no puede ser negativo");
+    }
+    }
 }

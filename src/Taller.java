@@ -7,6 +7,7 @@ public class Taller {
     private ArrayList<Vehiculo> vehiculos;
     private ArrayList<Cliente> clientes;
     private ArrayList<Pieza> piezas;
+    private ArrayList<Reparacion> reparaciones;
 
     public Taller(String nombre, String direccion) {
         this.nombre = nombre;
@@ -15,7 +16,9 @@ public class Taller {
         this.vehiculos = new ArrayList<>();
         this.clientes = new ArrayList<>();
         this.piezas = new ArrayList<>();
+        this.reparaciones = new ArrayList<>();
     }
+    
 
     // Métodos para agregar elementos
     public void agregarEmpleado(Empleado empleado) {
@@ -32,6 +35,14 @@ public class Taller {
 
     public void agregarPieza(Pieza pieza) {
         piezas.add(pieza);
+    }
+
+    public void agregarReparacion(Reparacion reparacion) {
+        this.reparaciones.add(reparacion);
+    }
+    
+    public ArrayList<Reparacion> getReparaciones() {
+        return this.reparaciones;
     }
 
     // Getters
