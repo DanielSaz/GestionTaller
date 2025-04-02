@@ -132,20 +132,21 @@ public class App {
         System.out.println("No se encontró cliente con ID: " + id);
     }
 
-    private static void modificarTelefonoCliente() {
+    private static void modificarTelefonoCliente() {    
         System.out.print("\nIngrese ID del cliente a modificar: ");
         int id = leerEntero();
+
+        Cliente cliente = buscarClientePorId(id);
+        if(cliente == null) {
+            System.out.println("No se encontró cliente con ID: " + id);
+            return;
+        }   
+        System.out.print("Nuevo teléfono: ");
+        String nuevoTelefono = scanner.nextLine();
         
-        for(Cliente c : taller.getClientes()) {
-            if(c.getId() == id) {
-                System.out.print("Nuevo teléfono: ");
-                String nuevoTelefono = scanner.nextLine();
-                // Necesitaríamos un setter en la clase Cliente para modificar el teléfono
-                System.out.println("Teléfono actualizado.");
-                return;
-            }
-        }
-        System.out.println("No se encontró cliente con ID: " + id);
+        // Actualizar el teléfono del cliente
+        cliente.setTelefono(nuevoTelefono);
+        System.out.println("Teléfono actualizado correctamente para: " + cliente.getNombre());
     }
 
 
@@ -248,7 +249,7 @@ public class App {
         System.out.println("Total vehículos: " + vehiculos.size());
     }
 
-    //Metodo para buschar coche por la matricula 
+    //Metodo para buschar coche
     private static void buscarVehiculo() {
         System.out.print("\nIngrese matrícula del vehículo: ");
         String matricula = scanner.nextLine().trim().toUpperCase();
@@ -280,7 +281,40 @@ public class App {
         return null; 
     }
 
+    //Metodo para reasignar el vehiculo al cliente 
+    private static void asignarVehiculoACliente() {
+        listarVehiculos();
+        System.out.print("\nIngrese matrícula del vehículo: ");  
+        String matricula = scanner.nextLine().trim().toUpperCase(); 
+        // Lee la matrícula ingresada, eliminando espacios y convirtiendo a mayúsculas
+        Vehiculo vehiculo = buscarVehiculoPorMatricula(matricula);
+        // Busca el vehículo por su matrícula en la lista del taller
+        if(vehiculo == null) {
+            System.out.println("Vehículo no encontrado");
+            return; // Termina el método si el vehículo no existe
+        }
+        listarClientes();
+        System.out.print("ID del nuevo propietario: ");
+        int idNuevoPropietario = leerEntero(); 
+        // Busca el cliente por su ID en la lista del taller
+        Cliente nuevoPropietario = buscarClientePorId(idNuevoPropietario);
 
+        if(nuevoPropietario == null) {
+            System.out.println("Cliente no encontrado");
+            return; // Termina el método si el cliente no existe
+        }
+        // Obtiene el propietario actual del vehículo
+        Cliente antiguoPropietario = vehiculo.getPropietario();
+        // Remueve el vehículo de la lista del antiguo propietario
+        antiguoPropietario.getVehiculos().remove(vehiculo);
+        vehiculo.setPropietario(nuevoPropietario); 
+        nuevoPropietario.agregarVehiculo(vehiculo);
+        
+        System.out.println("Vehículo reasignado correctamente");
+        System.out.println("Nuevo propietario: " + nuevoPropietario.getNombre());
+        System.out.println("Vehículo: " + vehiculo.getMarca() + " " + vehiculo.getModelo() + 
+                        " (" + vehiculo.getMatricula() + ")");
+    }
 
     
     

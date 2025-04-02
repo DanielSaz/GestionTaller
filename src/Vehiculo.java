@@ -27,4 +27,9 @@ public class Vehiculo {
     public String getModelo() { return modelo; }
     public Cliente getPropietario() { return propietario; }
     public ArrayList<Reparacion> getHistorialReparaciones() { return historialReparaciones; }
+
+    // Setter
+    public void setPropietario(Cliente propietario) {
+        this.propietario = propietario;
+    }
 }
