@@ -143,7 +143,7 @@ public class App {
         }   
         System.out.print("Nuevo teléfono: ");
         String nuevoTelefono = scanner.nextLine();
-        
+
         // Actualizar el teléfono del cliente
         cliente.setTelefono(nuevoTelefono);
         System.out.println("Teléfono actualizado correctamente para: " + cliente.getNombre());
@@ -365,6 +365,103 @@ public class App {
             taller.agregarEmpleado(nuevoEmpleado);
         }
         System.out.println("Empleado registrado con éxito");
+    }
+
+    //Metodo para listar los empleados 
+    private static void listarEmpleados() {
+        ArrayList<Empleado> empleados = taller.getEmpleados();
+        
+        if(empleados.isEmpty()) { 
+            System.out.println("\nNo hay empleados registrados.");  
+            return;
+        }
+        System.out.println("\n--- LISTADO DE EMPLEADOS ---");
+        System.out.printf("%-5s %-20s %-15s %-15s%n", "ID", "Nombre", "Puesto", "Especialidad"); 
+        System.out.println("--------------------------------------------------");  
+        
+        for(Empleado trabajador : empleados) {
+            // Determinar especialidad (solo para mecánicos)
+            String especialidad = (trabajador instanceof Mecanico) ? 
+                ((Mecanico)trabajador).getEspecialidad() : "N/A"; 
+            
+            System.out.printf("%-5d %-20s %-15s %-15s%n",
+            trabajador.getId(), 
+            trabajador.getNombre(),  
+            trabajador.getPuesto(),  
+                especialidad);  
+        }
+    }
+
+    // Metodo para buscar un empleado
+    private static void buscarEmpleado() {
+        System.out.print("\nIngrese ID del empleado: ");
+        int id = leerEntero();
+        Empleado empleado = buscarEmpleadoPorId(id);  // Buscar empleado
+        
+        if(empleado == null) {  
+            System.out.println("No se encontró empleado con ID: " + id);  
+            return; 
+        }
+        
+        System.out.println("\n--- DATOS DEL EMPLEADO ---");
+        System.out.println("ID: " + empleado.getId());  
+        System.out.println("Nombre: " + empleado.getNombre());  
+        System.out.println("Puesto: " + empleado.getPuesto());  
+        
+        if(empleado instanceof Mecanico) {  
+            System.out.println("Especialidad: " + ((Mecanico)empleado).getEspecialidad());  // Mostrar especialidad
+        }
+    }
+    //Metodo para buscar un empleado por su ID 
+    private static Empleado buscarEmpleadoPorId(int id) {
+        
+        for(Empleado trabajador : taller.getEmpleados()) {
+            if(trabajador.getId() == id) {  
+                return trabajador;  
+            }
+        }
+        return null;  
+    }
+
+    //Metodo para modifiar los datos de un empleado
+    private static void modificarEmpleado() {
+        System.out.print("\nIngrese ID del empleado a modificar: "); 
+        int id = leerEntero(); 
+        Empleado empleado = buscarEmpleadoPorId(id);  // Buscar empleado  
+        if(empleado == null) { 
+            System.out.println("Empleado no encontrado");  
+            return;  
+        }
+        System.out.println("\nDatos actuales:");
+        System.out.println("Nombre: " + empleado.getNombre());  
+        System.out.println("Puesto: " + empleado.getPuesto());  
+        
+        if(empleado instanceof Mecanico) {  // Si es mecánico
+            System.out.println("Especialidad: " + ((Mecanico)empleado).getEspecialidad());  // Especialidad actual
+        }
+    
+        System.out.println("\nIngrese nuevos datos (dejar en blanco para no modificar):");
+        
+        System.out.print("Nuevo nombre: ");  
+        String nuevoNombre = scanner.nextLine();  
+        if(!nuevoNombre.isEmpty()) {  
+            empleado.setNombre(nuevoNombre); 
+        }
+        
+        System.out.print("Nuevo puesto: ");  
+        String nuevoPuesto = scanner.nextLine();  
+        if(!nuevoPuesto.isEmpty()) { 
+            empleado.setPuesto(nuevoPuesto);  
+        }
+        // Modificar especialidad si es mecánico (si se proporciona)
+        if(empleado instanceof Mecanico) {  
+            System.out.print("Nueva especialidad: ");  
+            String nuevaEspecialidad = scanner.nextLine();  
+            if(!nuevaEspecialidad.isEmpty()) {  // Si se ingresó especialidad
+                ((Mecanico)empleado).setEspecialidad(nuevaEspecialidad);  // Actualizar especialidad
+            }
+        }
+        System.out.println("Datos actualizados correctamente");
     }
 
     
