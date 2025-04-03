@@ -8,6 +8,7 @@ public class Taller {
     private ArrayList<Cliente> clientes;
     private ArrayList<Pieza> piezas;
     private ArrayList<Reparacion> reparaciones;
+    private ArrayList<Proveedor> proveedores;
 
     public Taller(String nombre, String direccion) {
         this.nombre = nombre;
@@ -17,6 +18,7 @@ public class Taller {
         this.clientes = new ArrayList<>();
         this.piezas = new ArrayList<>();
         this.reparaciones = new ArrayList<>();
+        this.proveedores = new ArrayList<>();
     }
     
 
@@ -45,9 +47,18 @@ public class Taller {
         return this.reparaciones;
     }
 
+    public ArrayList <Proveedor> getProveedores() {
+        return this.proveedores;
+    }
+
+    public void agregarProveedor(Proveedor proveedor) {
+        proveedores.add(proveedor);
+    }
+
     // Getters
     public ArrayList<Empleado> getEmpleados() { return empleados; }
     public ArrayList<Vehiculo> getVehiculos() { return vehiculos; }
     public ArrayList<Cliente> getClientes() { return clientes; }
     public ArrayList<Pieza> getPiezas() { return piezas; }
+    public ArrayList<Proveedor> getProveedor() { return proveedores; }
 }

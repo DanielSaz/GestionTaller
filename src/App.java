@@ -700,8 +700,164 @@ public class App {
 
     // Métodos de gestión de inventario 
     private static void gestionInventario() {
-        System.out.println("\nGestión de inventario - Implementar similar a gestión de clientes");
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE INVENTARIO ===");
+            System.out.println("1. Agregar pieza al inventario");
+            System.out.println("2. Listar todas las piezas");
+            System.out.println("3. Buscar pieza por ID");
+            System.out.println("4. Modificar stock de pieza");
+            System.out.println("5. Registrar nuevo proveedor");
+            System.out.println("6. Listar proveedores");
+            System.out.println("0. Volver al menú principal");
+            System.out.print("Seleccione una opción: ");
+            
+            opcion = leerEntero();
+            
+            switch(opcion) {
+                case 1: agregarPieza(); break;
+                case 2: listarPiezas(); break;
+                case 3: buscarPieza(); break;
+                case 4: modificarStockPieza(); break;
+                case 5: registrarProveedor(); break;
+                case 6: listarProveedores(); break;
+                case 0: break;
+                default: System.out.println("Opción no válida.");
+            }
+        } while(opcion != 0);
     }
+
+    //Metodo para agrear una pieza 
+    private static void agregarPieza() {
+        System.out.println("\n--- AGREGAR NUEVA PIEZA ---");
+        // Mostrar lista de proveedores disponibles
+        listarProveedores();
+        System.out.print("ID del proveedor: ");
+        int idProveedor = leerEntero(); 
+        // Busca el proveedor en la lista
+        Proveedor proveedor = buscarProveedorPorId(idProveedor);
+        
+        if(proveedor == null) {
+            System.out.println("Proveedor no encontrado");
+            return; 
+        }
+        System.out.print("Nombre de la pieza: ");
+        String nombre = scanner.nextLine(); 
+        
+        System.out.print("Precio: ");
+        double precio = leerDouble(); 
+        
+        System.out.print("Cantidad en stock: ");
+        int stock = leerEntero(); 
+        // Crea la nueva pieza con los datos ingresados
+        Pieza nuevaPieza = new Pieza(nextId(), nombre, precio, stock, proveedor);
+        // Agrega la pieza al inventario del taller
+        taller.agregarPieza(nuevaPieza);
+        System.out.println("Pieza agregada con ID: " + nuevaPieza.getId());
+    }
+    //Metodo para listar los proveedores
+    private static void listarProveedores() {
+        ArrayList<Proveedor> proveedores = taller.getProveedores();
+        System.out.println("\n--- LISTADO DE PROVEEDORES ---");
+        System.out.printf("%-5s %-25s %-15s%n", "ID", "Nombre", "Teléfono");
+        System.out.println("------------------------------------------");
+        // Mostrar cada proveedor en formato de tabla
+        for(Proveedor prov : proveedores) {
+            System.out.printf("%-5d %-25s %-15s%n",
+                prov.getId(),
+                prov.getNombre(),
+                prov.getTelefono());
+        }
+    }
+    //Metodo para buscar un proveedor por id
+    private static Proveedor buscarProveedorPorId(int id) {
+        for(Proveedor prov : taller.getProveedores()) {
+            if(prov.getId() == id) {
+                return prov;
+            }
+        }
+        return null;
+    }
+
+    //Metodo para listar piezas
+    private static void listarPiezas() {
+        ArrayList<Pieza> piezas = taller.getPiezas();
+        if(piezas.isEmpty()) {
+            System.out.println("\nNo hay piezas en el inventario.");
+            return; 
+        }
+        System.out.println("\n--- LISTADO DE PIEZAS ---");
+        // Formato de columnas: ID (5), Nombre (25), Precio (10), Stock (8), Proveedor (20)
+        System.out.printf("%-5s %-25s %-10s %-8s %-20s%n", 
+                         "ID", "Nombre", "Precio", "Stock", "Proveedor");
+        System.out.println("------------------------------------------------------------");
+        // Recorre todas las piezas y muestra sus datos
+        for(Pieza pieza : piezas) {
+            System.out.printf("%-5d %-25s %-10.2f %-8d %-20s%n",
+            pieza.getId(),         
+            pieza.getNombre(),      
+            pieza.getPrecio(),     
+            pieza.getCantidadStock(), 
+            pieza.getProveedor().getNombre()); 
+        }
+    }
+
+    //Metodo para buscar piezas
+    private static void buscarPieza() {
+        System.out.print("\nIngrese ID de la pieza: ");
+        int id = leerEntero();
+        Pieza pieza = buscarPiezaPorId(id);
+        if(pieza == null) {
+            System.out.println("Pieza no encontrada");
+            return; 
+        }
+        System.out.println("\n--- DETALLES DE LA PIEZA ---");
+        System.out.println("ID: " + pieza.getId());
+        System.out.println("Nombre: " + pieza.getNombre());
+        System.out.println("Precio: " + pieza.getPrecio() + "€");
+        System.out.println("Stock disponible: " + pieza.getCantidadStock());
+        System.out.println("Proveedor: " + pieza.getProveedor().getNombre());
+        System.out.println("Teléfono proveedor: " + pieza.getProveedor().getTelefono());
+    }
+
+    //Metodo para modificar el stock de una pieza
+    private static void modificarStockPieza() {
+        System.out.print("\nIngrese ID de la pieza: ");
+        int id = leerEntero();
+
+        Pieza pieza = buscarPiezaPorId(id);
+        if(pieza == null) {
+            System.out.println("Pieza no encontrada");
+            return; 
+        }
+        System.out.println("\nStock actual: " + pieza.getCantidadStock());
+        System.out.print("Nuevo valor de stock: ");
+        int nuevoStock = leerEntero(); 
+
+        if(nuevoStock >= 0) {
+            pieza.setCantidadStock(nuevoStock); // Actualiza el stock
+            System.out.println("Stock actualizado correctamente");
+        } else {
+            System.out.println("El stock no puede ser negativo"); 
+        }
+    }
+
+    //Metodo para registrar un proveedor
+    private static void registrarProveedor() {
+        System.out.println("\n--- REGISTRAR NUEVO PROVEEDOR ---");
+        System.out.print("Nombre del proveedor: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Teléfono: ");
+        String telefono = scanner.nextLine();
+        
+        Proveedor nuevoProveedor = new Proveedor(nextId(), nombre, telefono);
+        taller.agregarProveedor(nuevoProveedor);
+        System.out.println("Proveedor registrado con ID: " + nuevoProveedor.getId());
+    }
+    
+    
+    
 
 
 
