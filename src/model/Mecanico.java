@@ -1,8 +1,9 @@
+package model;
 public class Mecanico extends Empleado { //Hereda de la clase empleado 
     private String especialidad;
 
     public Mecanico(int id, String nombre, String puesto, String especialidad) {
-        super(id, nombre, puesto);
+        super(id, nombre, puesto); // Llama al constructor de la clase Empleado
         this.especialidad = especialidad;
     }
 

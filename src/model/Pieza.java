@@ -1,3 +1,4 @@
+package model;
 public class Pieza {
     private int id;
     private String nombre;

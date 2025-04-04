@@ -1,4 +1,10 @@
 import java.util.ArrayList;
+import model.Cliente;
+import model.Empleado;
+import model.Pieza;
+import model.Proveedor;
+import model.Reparacion;
+import model.Vehiculo;
 
 public class Taller {
     private String nombre;

@@ -1,3 +1,4 @@
+package model;
 public class Empleado {
     private int id;
     private String nombre;
