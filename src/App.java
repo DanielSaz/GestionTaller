@@ -860,11 +860,184 @@ public class App {
     
 
 
-
-
-
-    // Métodos para mostrar reportes (implementación básica)
+    // Métodos para mostrar reportes 
     private static void mostrarReportes() {
-        System.out.println("\nMostrar reportes - Implementar según requerimientos");
+            int opcion;
+        do {
+            System.out.println("\n=== REPORTES DEL TALLER ===");
+            System.out.println("1. Reporte de clientes y vehículos");
+            System.out.println("2. Reporte de reparaciones");
+            System.out.println("3. Estado del inventario");
+            System.out.println("4. Resumen financiero");
+            System.out.println("5. Productividad de empleados");
+            System.out.println("0. Volver al menú principal");
+            System.out.print("Seleccione un reporte: ");
+            
+            opcion = leerEntero();
+            
+            switch(opcion) {
+                case 1: reporteClientesVehiculos(); break;
+                case 2: reporteReparaciones(); break;
+                case 3: reporteInventario(); break;
+                case 4: reporteFinanciero(); break;
+                case 5: reporteProductividad(); break;
+                case 0: System.out.println("Volviendo al menú principal..."); break;
+                default: System.out.println("Opción no válida.");
+            }
+        } while(opcion != 0);
+        }
+
+    //Metodo para reportar los vehiculos de los clientes
+    private static void reporteClientesVehiculos() {
+        System.out.println("\n--- REPORTE DE CLIENTES Y VEHÍCULOS ---");
+        // Formato de columnas: ID (5), Nombre (20), Teléfono (15), Vehículos (10), Última visita (15)
+        System.out.printf("%-5s %-20s %-15s %-10s %-15s%n", 
+                         "ID", "Nombre", "Teléfono", "Vehículos", "Última visita");
+        System.out.println("------------------------------------------------------------");
+
+        for(Cliente cliente : taller.getClientes()) {
+            String ultimaVisita = "Nunca";
+            if(!cliente.getVehiculos().isEmpty()) {
+                // Buscar la reparación más reciente entre todos sus vehículos
+                for(Vehiculo vehiculo : cliente.getVehiculos()) {
+                    if(!vehiculo.getHistorialReparaciones().isEmpty()) {
+                        // Obtener la fecha de la última reparación 
+                        ultimaVisita = vehiculo.getHistorialReparaciones()
+                                              .get(vehiculo.getHistorialReparaciones().size()-1)
+                                              .getFecha();
+                    }
+                }
+            }
+            
+            // Mostrar los datos del cliente formateados
+            System.out.printf("%-5d %-20s %-15s %-10d %-15s%n",
+                cliente.getId(),            
+                cliente.getNombre(),       
+                cliente.getTelefono(),   
+                cliente.getVehiculos().size(), 
+                ultimaVisita);            
+        }
+
+        System.out.println("\nTotal clientes: " + taller.getClientes().size());
+        System.out.println("Total vehículos registrados: " + taller.getVehiculos().size());
     }
+
+    //Metodo para reportar reparaciones
+    private static void reporteReparaciones() {
+        System.out.println("\n--- REPORTE DE REPARACIONES ---");
+        System.out.printf("%-5s %-12s %-15s %-10s %-15s %-10s%n", 
+                         "ID", "Vehículo", "Mecánico", "Piezas", "Costo", "Fecha");
+        System.out.println("------------------------------------------------------------------");
+        
+        // Variables para calcular totales
+        double totalReparaciones = 0; // Acumulador del costo total
+        int totalPiezasUsadas = 0;    // Contador de piezas usadas
+        
+        for(Reparacion reparacion : taller.getReparaciones()) {
+            int numPiezas = reparacion.getPiezasUsadas().size(); // Piezas usadas en esta reparación
+            totalPiezasUsadas += numPiezas; // Sumar al total
+            totalReparaciones += reparacion.getCosto(); // Sumar al acumulador
+
+            System.out.printf("%-5d %-12s %-15s %-10d %-10.2f€ %-15s%n",
+                reparacion.getId(),                     
+                reparacion.getVehiculo().getMatricula(), 
+                reparacion.getEmpleado().getNombre(),   
+                numPiezas,                            
+                reparacion.getCosto(),                  
+                reparacion.getFecha());                 
+        }
+        System.out.println("\nTotal reparaciones: " + taller.getReparaciones().size());
+        System.out.println("Total piezas utilizadas: " + totalPiezasUsadas);
+        System.out.printf("Ingresos totales por reparaciones: %.2f€%n", totalReparaciones);
+    }
+
+    //Metodo para reportar el inventario
+    private static void reporteInventario() {
+        System.out.println("\n--- REPORTE DE INVENTARIO ---");
+        // Formato de columnas: ID (5), Pieza (25), Precio (10), Stock (8), Proveedor (20)
+        System.out.printf("%-5s %-25s %-10s %-8s %-20s%n", 
+                         "ID", "Pieza", "Precio", "Stock", "Proveedor");
+        System.out.println("------------------------------------------------------------");
+        
+        // Variables para calcular totales
+        int piezasBajoStock = 0;         
+        double valorTotalInventario = 0; 
+
+        for(Pieza pieza : taller.getPiezas()) {
+            // Verificar si el stock contiene menos de 5 
+            if(pieza.getCantidadStock() < 5) {
+                piezasBajoStock++;
+            }
+            // Calcular el valor total de esta pieza 
+            valorTotalInventario += (pieza.getPrecio() * pieza.getCantidadStock());
+            
+            System.out.printf("%-5d %-25s %-10.2f %-8d %-20s%n",
+                pieza.getId(),            
+                pieza.getNombre(),        
+                pieza.getPrecio(),        
+                pieza.getCantidadStock(), 
+                pieza.getProveedor().getNombre()); 
+        }
+        System.out.println("\nTotal piezas en inventario: " + taller.getPiezas().size());
+        System.out.println("Piezas con stock bajo (<5 unidades): " + piezasBajoStock);
+        System.out.printf("Valor total del inventario: %.2f€%n", valorTotalInventario);
+    }
+
+    //Metodo para reportar la financiacion 
+    private static void reporteFinanciero() {
+        System.out.println("\n--- REPORTE FINANCIERO ---");
+        // Calcular ingresos por reparaciones
+        double ingresosReparaciones = 0; 
+        for(Reparacion reparacion : taller.getReparaciones()) {
+            ingresosReparaciones += reparacion.getCosto(); 
+        }
+        // Calcular valor del inventario
+        double valorInventario = 0; 
+        for(Pieza pieza : taller.getPiezas()) {
+            valorInventario += (pieza.getPrecio() * pieza.getCantidadStock()); 
+        }
+        System.out.printf("Ingresos por reparaciones: %10.2f€%n", ingresosReparaciones);
+        System.out.printf("Valor del inventario:      %10.2f€%n", valorInventario);
+        System.out.println("----------------------------------");
+        System.out.printf("Total:                     %10.2f€%n", (ingresosReparaciones + valorInventario));
+        // Calcular promedio por reparación
+        System.out.printf("Promedio por reparación:   %10.2f€%n", 
+            taller.getReparaciones().isEmpty() ? 0 : ingresosReparaciones / taller.getReparaciones().size());
+        System.out.printf("Clientes atendidos:        %10d%n", taller.getClientes().size());
+    }
+
+    //Metodo para reportar la productividad
+    private static void reporteProductividad() {
+        System.out.println("\n--- PRODUCTIVIDAD DE EMPLEADOS ---");
+        // Formato de columnas: ID (5), Nombre (20), Puesto (15), Reparaciones (15), Ingresos (10)
+        System.out.printf("%-5s %-20s %-15s %-15s %-10s%n", 
+                         "ID", "Nombre", "Puesto", "Reparaciones", "Ingresos");
+        System.out.println("------------------------------------------------------------");
+ 
+        for(Empleado empleado : taller.getEmpleados()) {
+            int reparaciones = 0;    // Contador de reparaciones
+            double ingresos = 0;     // Acumulador de ingresos
+
+            // Solo los mecánicos tienen reparaciones asignadas
+            if(empleado instanceof Mecanico) {
+                // Contar reparaciones y calcular ingresos generados por este mecánico
+                for(Reparacion reparacion : taller.getReparaciones()) {
+                    if(reparacion.getEmpleado().getId() == empleado.getId()) {
+                        reparaciones++;
+                        ingresos += reparacion.getCosto();
+                    }
+                }
+            }
+            System.out.printf("%-5d %-20s %-15s %-15d %-10.2f€%n",
+                empleado.getId(),     
+                empleado.getNombre(), 
+                empleado.getPuesto(), 
+                reparaciones,         
+                ingresos);            
+        }
+    }
+
 }
+
+    
+    
