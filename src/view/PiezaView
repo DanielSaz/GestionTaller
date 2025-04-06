@@ -1,0 +1,153 @@
+package view;
+
+import dao.PiezaDAO;
+import dao.ProveedorDAO;
+import model.Pieza;
+import model.Proveedor;
+import java.util.List;
+import java.util.Scanner;
+
+public class PiezaView {
+    private PiezaDAO piezaDAO;
+    private ProveedorDAO proveedorDAO;
+    private Scanner scanner;
+
+    public PiezaView(PiezaDAO piezaDAO, ProveedorDAO proveedorDAO, Scanner scanner) {
+        this.piezaDAO = piezaDAO;
+        this.proveedorDAO = proveedorDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE PIEZAS ===");
+            System.out.println("1. Registrar pieza");
+            System.out.println("2. Listar piezas");
+            System.out.println("3. Buscar por ID");
+            System.out.println("4. Actualizar stock");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarPieza(); break;
+                case 2: listarPiezas(); break;
+                case 3: buscarPorId(); break;
+                case 4: actualizarStock(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarPieza() {
+        System.out.println("\n--- NUEVA PIEZA ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Precio: ");
+        double precio = scanner.nextDouble();
+        scanner.nextLine();
+        
+        System.out.print("Cantidad en stock: ");
+        int stock = scanner.nextInt();
+        scanner.nextLine();
+        
+        System.out.println("\n--- SELECCIONAR PROVEEDOR ---");
+        List<Proveedor> proveedores = proveedorDAO.listarTodos();
+        for(Proveedor p : proveedores) {
+            System.out.println(p.getId() + " - " + p.getNombre());
+        }
+        
+        System.out.print("ID del proveedor: ");
+        int idProveedor = scanner.nextInt();
+        scanner.nextLine();
+        
+        Proveedor proveedor = proveedorDAO.buscarPorId(idProveedor);
+        if(proveedor == null) {
+            System.out.println("Proveedor no encontrado");
+            return;
+        }
+        
+        Pieza pieza = new Pieza(0, nombre, precio, stock, proveedor);
+        if(piezaDAO.registrar(pieza)) {
+            System.out.println("Pieza registrada con ID: " + pieza.getId());
+        } else {
+            System.out.println("Error al registrar pieza");
+        }
+    }
+
+    private void listarPiezas() {
+        List<Pieza> piezas = piezaDAO.listarTodas();
+        System.out.println("\n--- LISTADO DE PIEZAS ---");
+        System.out.printf("%-5s %-20s %-10s %-8s %-20s%n", 
+            "ID", "Nombre", "Precio", "Stock", "Proveedor");
+        
+        for(Pieza p : piezas) {
+            System.out.printf("%-5d %-20s %-10.2f %-8d %-20s%n",
+                p.getId(), p.getNombre(), p.getPrecio(),
+                p.getCantidadStock(), p.getProveedor().getNombre());
+        }
+    }
+
+    private void buscarPorId() {
+        System.out.print("\nIngrese ID de pieza: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Pieza pieza = piezaDAO.buscarPorId(id);
+        if(pieza != null) {
+            System.out.println("\n--- DETALLES DE PIEZA ---");
+            System.out.println("ID: " + pieza.getId());
+            System.out.println("Nombre: " + pieza.getNombre());
+            System.out.println("Precio: " + pieza.getPrecio() + "€");
+            System.out.println("Stock: " + pieza.getCantidadStock());
+            System.out.println("Proveedor: " + pieza.getProveedor().getNombre());
+        } else {
+            System.out.println("Pieza no encontrada");
+        }
+    }
+
+    private void actualizarStock() {
+        System.out.print("\nIngrese ID de pieza: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        System.out.print("Nuevo stock: ");
+        int nuevoStock = scanner.nextInt();
+        scanner.nextLine();
+        
+        if(piezaDAO.actualizarStock(id, nuevoStock)) {
+            System.out.println("Stock actualizado correctamente");
+        } else {
+            System.out.println("Error al actualizar stock");
+        }
+    }
+
+    private void generarReporte() {
+        List<Pieza> piezas = piezaDAO.listarTodas();
+        System.out.println("\n--- REPORTE DE INVENTARIO ---");
+        System.out.printf("%-5s %-20s %-10s %-8s %-20s%n", 
+            "ID", "Nombre", "Precio", "Stock", "Proveedor");
+        
+        int piezasBajoStock = 0;
+        double valorTotal = 0;
+        
+        for(Pieza p : piezas) {
+            System.out.printf("%-5d %-20s %-10.2f %-8d %-20s%n",
+                p.getId(), p.getNombre(), p.getPrecio(),
+                p.getCantidadStock(), p.getProveedor().getNombre());
+            
+            if(p.getCantidadStock() < 5) piezasBajoStock++;
+            valorTotal += p.getPrecio() * p.getCantidadStock();
+        }
+        
+        System.out.println("\nPiezas con stock bajo (<5): " + piezasBajoStock);
+        System.out.printf("Valor total del inventario: %.2f€\n", valorTotal);
+    }
+}

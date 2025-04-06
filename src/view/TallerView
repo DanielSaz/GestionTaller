@@ -1,0 +1,130 @@
+package view;
+
+import dao.TallerDAO;
+import model.Taller;
+import java.util.List;
+import java.util.Scanner;
+
+public class TallerView {
+    private TallerDAO tallerDAO;
+    private Scanner scanner;
+
+    public TallerView(TallerDAO tallerDAO, Scanner scanner) {
+        this.tallerDAO = tallerDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE TALLER ===");
+            System.out.println("1. Registrar taller");
+            System.out.println("2. Listar talleres");
+            System.out.println("3. Buscar por ID");
+            System.out.println("4. Actualizar información");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarTaller(); break;
+                case 2: listarTalleres(); break;
+                case 3: buscarPorId(); break;
+                case 4: actualizarTaller(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarTaller() {
+        System.out.println("\n--- NUEVO TALLER ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Dirección: ");
+        String direccion = scanner.nextLine();
+        
+        Taller taller = new Taller(nombre, direccion);
+        if(tallerDAO.registrar(taller)) {
+            System.out.println("Taller registrado con ID: " + taller.getId());
+        } else {
+            System.out.println("Error al registrar taller");
+        }
+    }
+
+    private void listarTalleres() {
+        List<Taller> talleres = tallerDAO.listarTodos();
+        System.out.println("\n--- LISTADO DE TALLERES ---");
+        System.out.printf("%-5s %-20s %-30s%n", "ID", "Nombre", "Dirección");
+        for(Taller t : talleres) {
+            System.out.printf("%-5d %-20s %-30s%n", 
+                t.getId(), t.getNombre(), t.getDireccion());
+        }
+    }
+
+    private void buscarPorId() {
+        System.out.print("\nIngrese ID del taller: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Taller taller = tallerDAO.buscarPorId(id);
+        if(taller != null) {
+            System.out.println("\n--- DETALLES DEL TALLER ---");
+            System.out.println("ID: " + taller.getId());
+            System.out.println("Nombre: " + taller.getNombre());
+            System.out.println("Dirección: " + taller.getDireccion());
+            System.out.println("Clientes: " + tallerDAO.contarClientes(id));
+            System.out.println("Vehículos: " + tallerDAO.contarVehiculos(id));
+            System.out.println("Reparaciones: " + tallerDAO.contarReparaciones(id));
+        } else {
+            System.out.println("Taller no encontrado");
+        }
+    }
+
+    private void actualizarTaller() {
+        System.out.print("\nIngrese ID del taller: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Taller taller = tallerDAO.buscarPorId(id);
+        if(taller == null) {
+            System.out.println("Taller no encontrado");
+            return;
+        }
+        
+        System.out.print("Nuevo nombre (" + taller.getNombre() + "): ");
+        String nombre = scanner.nextLine();
+        if(!nombre.isEmpty()) taller.setNombre(nombre);
+        
+        System.out.print("Nueva dirección (" + taller.getDireccion() + "): ");
+        String direccion = scanner.nextLine();
+        if(!direccion.isEmpty()) taller.setDireccion(direccion);
+        
+        if(tallerDAO.actualizar(taller)) {
+            System.out.println("Taller actualizado correctamente");
+        } else {
+            System.out.println("Error al actualizar taller");
+        }
+    }
+
+    private void generarReporte() {
+        List<Taller> talleres = tallerDAO.listarTodos();
+        System.out.println("\n--- REPORTE DE TALLERES ---");
+        System.out.printf("%-5s %-20s %-30s %-8s %-8s %-12s%n", 
+            "ID", "Nombre", "Dirección", "Clientes", "Vehículos", "Reparaciones");
+        
+        for(Taller t : talleres) {
+            System.out.printf("%-5d %-20s %-30s %-8d %-8d %-12d%n",
+                t.getId(), t.getNombre(), t.getDireccion(),
+                tallerDAO.contarClientes(t.getId()),
+                tallerDAO.contarVehiculos(t.getId()),
+                tallerDAO.contarReparaciones(t.getId()));
+        }
+        System.out.println("\nTotal talleres: " + talleres.size());
+    }
+}

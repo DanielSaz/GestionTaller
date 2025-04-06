@@ -1,0 +1,189 @@
+package dao;
+
+import model.*;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TallerDAO {
+    private Connection connection;
+    
+    public TallerDAO(Connection connection) {
+        this.connection = connection;
+    }
+
+    // Método para registrar un nuevo taller en la base de datos
+    public boolean registrarTaller(Taller taller) {
+        String sql = "INSERT INTO Talleres (nombre, direccion) VALUES (?, ?)";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            // Establecer parámetros
+            stmt.setString(1, taller.getNombre());
+            stmt.setString(2, taller.getDireccion());
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows == 0) {
+                throw new SQLException("No se pudo registrar el taller, ninguna fila afectada.");
+            }
+            
+            // Obtener el ID generado
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    taller.setId(generatedKeys.getInt(1));
+                } else {
+                    throw new SQLException("No se obtuvo el ID generado para el taller.");
+                }
+            }
+            
+            return true;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al registrar taller: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los talleres registrados
+    public List<Taller> obtenerTodosTalleres() {
+        List<Taller> talleres = new ArrayList<>();
+        String sql = "SELECT * FROM Talleres";
+        
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Taller taller = new Taller(
+                    rs.getString("nombre"),
+                    rs.getString("direccion")
+                );
+                taller.setId(rs.getInt("id"));
+                talleres.add(taller);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener talleres: " + e.getMessage());
+        }
+        
+        return talleres;
+    }
+
+    // Método para buscar un taller por su ID
+    public Taller buscarTallerPorId(int id) {
+        String sql = "SELECT * FROM Talleres WHERE id = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Taller taller = new Taller(
+                        rs.getString("nombre"),
+                        rs.getString("direccion")
+                    );
+                    taller.setId(rs.getInt("id"));
+                    return taller;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar taller: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar los datos de un taller
+    public boolean actualizarTaller(Taller taller) {
+        String sql = "UPDATE Talleres SET nombre = ?, direccion = ? WHERE id = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setString(1, taller.getNombre());
+            stmt.setString(2, taller.getDireccion());
+            stmt.setInt(3, taller.getId());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar taller: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para eliminar un taller
+    public boolean eliminarTaller(int id) {
+        String sql = "DELETE FROM Talleres WHERE id = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar taller: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Métodos estadísticos (reportes)
+    
+    public int contarClientesEnTaller(int idTaller) {
+        String sql = "SELECT COUNT(*) FROM Clientes WHERE id_taller = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idTaller);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar clientes: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+
+    public double calcularIngresosTotales(int idTaller) {
+        String sql = "SELECT SUM(costo) FROM Reparaciones WHERE id_taller = ?";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idTaller);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al calcular ingresos: " + e.getMessage());
+        }
+        
+        return 0.0;
+    }
+
+    public int contarReparacionesActivas(int idTaller) {
+        String sql = "SELECT COUNT(*) FROM Reparaciones WHERE id_taller = ? AND estado = 'EN_PROCESO'";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idTaller);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al contar reparaciones activas: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+}

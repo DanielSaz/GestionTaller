@@ -1,0 +1,125 @@
+package view;
+
+import dao.MecanicoDAO;
+import model.Mecanico;
+import java.util.List;
+import java.util.Scanner;
+
+public class MecanicoView {
+    private MecanicoDAO mecanicoDAO;
+    private Scanner scanner;
+
+    public MecanicoView(MecanicoDAO mecanicoDAO, Scanner scanner) {
+        this.mecanicoDAO = mecanicoDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE MECÁNICOS ===");
+            System.out.println("1. Registrar mecánico");
+            System.out.println("2. Listar mecánicos");
+            System.out.println("3. Buscar por especialidad");
+            System.out.println("4. Actualizar especialidad");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarMecanico(); break;
+                case 2: listarMecanicos(); break;
+                case 3: buscarPorEspecialidad(); break;
+                case 4: actualizarEspecialidad(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarMecanico() {
+        System.out.println("\n--- NUEVO MECÁNICO ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Puesto: ");
+        String puesto = scanner.nextLine();
+        
+        System.out.print("Especialidad: ");
+        String especialidad = scanner.nextLine();
+        
+        Mecanico mecanico = new Mecanico(0, nombre, puesto, especialidad);
+        if(mecanicoDAO.registrar(mecanico)) {
+            System.out.println("Mecánico registrado con ID: " + mecanico.getId());
+        } else {
+            System.out.println("Error al registrar mecánico");
+        }
+    }
+
+    private void listarMecanicos() {
+        List<Mecanico> mecanicos = mecanicoDAO.listarTodos();
+        System.out.println("\n--- LISTADO DE MECÁNICOS ---");
+        System.out.printf("%-5s %-20s %-15s %-20s%n", 
+            "ID", "Nombre", "Puesto", "Especialidad");
+        
+        for(Mecanico m : mecanicos) {
+            System.out.printf("%-5d %-20s %-15s %-20s%n",
+                m.getId(), m.getNombre(), m.getPuesto(), m.getEspecialidad());
+        }
+    }
+
+    private void buscarPorEspecialidad() {
+        System.out.print("\nIngrese especialidad: ");
+        String especialidad = scanner.nextLine();
+        
+        List<Mecanico> mecanicos = mecanicoDAO.buscarPorEspecialidad(especialidad);
+        if(!mecanicos.isEmpty()) {
+            System.out.println("\n--- MECÁNICOS CON ESPECIALIDAD: " + especialidad + " ---");
+            for(Mecanico m : mecanicos) {
+                System.out.println("ID: " + m.getId() + " | Nombre: " + m.getNombre() + 
+                                 " | Reparaciones: " + mecanicoDAO.contarReparaciones(m.getId()));
+            }
+        } else {
+            System.out.println("No se encontraron mecánicos con esa especialidad");
+        }
+    }
+
+    private void actualizarEspecialidad() {
+        System.out.print("\nIngrese ID del mecánico: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Mecanico mecanico = mecanicoDAO.buscarPorId(id);
+        if(mecanico == null) {
+            System.out.println("Mecánico no encontrado");
+            return;
+        }
+        
+        System.out.print("Nueva especialidad (" + mecanico.getEspecialidad() + "): ");
+        String nuevaEspecialidad = scanner.nextLine();
+        
+        if(mecanicoDAO.actualizarEspecialidad(id, nuevaEspecialidad)) {
+            System.out.println("Especialidad actualizada correctamente");
+        } else {
+            System.out.println("Error al actualizar especialidad");
+        }
+    }
+
+    private void generarReporte() {
+        List<Mecanico> mecanicos = mecanicoDAO.listarTodos();
+        System.out.println("\n--- REPORTE DE MECÁNICOS ---");
+        System.out.printf("%-5s %-20s %-20s %-15s%n", 
+            "ID", "Nombre", "Especialidad", "Reparaciones");
+        
+        for(Mecanico m : mecanicos) {
+            System.out.printf("%-5d %-20s %-20s %-15d%n",
+                m.getId(), m.getNombre(), m.getEspecialidad(),
+                mecanicoDAO.contarReparaciones(m.getId()));
+        }
+        System.out.println("\nTotal mecánicos: " + mecanicos.size());
+    }
+}

@@ -1,0 +1,112 @@
+package view;
+
+import dao.ClienteDAO;
+import model.Cliente;
+import java.util.List;
+import java.util.Scanner;
+
+public class ClienteView {
+    private ClienteDAO clienteDAO;
+    private Scanner scanner;
+
+    public ClienteView(ClienteDAO clienteDAO, Scanner scanner) {
+        this.clienteDAO = clienteDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE CLIENTES ===");
+            System.out.println("1. Registrar cliente");
+            System.out.println("2. Listar clientes");
+            System.out.println("3. Buscar por ID");
+            System.out.println("4. Actualizar teléfono");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarCliente(); break;
+                case 2: listarClientes(); break;
+                case 3: buscarClientePorId(); break;
+                case 4: actualizarTelefono(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarCliente() {
+        System.out.println("\n--- NUEVO CLIENTE ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Teléfono: ");
+        String telefono = scanner.nextLine();
+        
+        Cliente cliente = new Cliente(0, nombre, telefono);
+        if(clienteDAO.registrar(cliente)) {
+            System.out.println("Cliente registrado con ID: " + cliente.getId());
+        } else {
+            System.out.println("Error al registrar cliente");
+        }
+    }
+
+    private void listarClientes() {
+        List<Cliente> clientes = clienteDAO.listarTodos();
+        System.out.println("\n--- LISTA DE CLIENTES ---");
+        System.out.printf("%-5s %-20s %-15s%n", "ID", "Nombre", "Teléfono");
+        for(Cliente c : clientes) {
+            System.out.printf("%-5d %-20s %-15s%n", 
+                c.getId(), c.getNombre(), c.getTelefono());
+        }
+    }
+
+    private void buscarClientePorId() {
+        System.out.print("\nIngrese ID del cliente: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Cliente cliente = clienteDAO.buscarPorId(id);
+        if(cliente != null) {
+            System.out.println("\n--- DETALLES DEL CLIENTE ---");
+            System.out.println("ID: " + cliente.getId());
+            System.out.println("Nombre: " + cliente.getNombre());
+            System.out.println("Teléfono: " + cliente.getTelefono());
+            System.out.println("Vehículos registrados: " + cliente.getVehiculos().size());
+        } else {
+            System.out.println("Cliente no encontrado");
+        }
+    }
+
+    private void actualizarTelefono() {
+        System.out.print("\nIngrese ID del cliente: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        System.out.print("Nuevo teléfono: ");
+        String nuevoTelefono = scanner.nextLine();
+        
+        if(clienteDAO.actualizarTelefono(id, nuevoTelefono)) {
+            System.out.println("Teléfono actualizado correctamente");
+        } else {
+            System.out.println("Error al actualizar teléfono");
+        }
+    }
+
+    private void generarReporte() {
+        List<Cliente> clientes = clienteDAO.listarTodos();
+        System.out.println("\n--- REPORTE DE CLIENTES ---");
+        System.out.printf("%-5s %-20s %-15s %-10s%n", "ID", "Nombre", "Teléfono", "Vehículos");
+        for(Cliente c : clientes) {
+            System.out.printf("%-5d %-20s %-15s %-10d%n",
+                c.getId(), c.getNombre(), c.getTelefono(), c.getVehiculos().size());
+        }
+        System.out.println("\nTotal clientes: " + clientes.size());
+    }
+}

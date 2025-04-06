@@ -1,0 +1,126 @@
+package view;
+
+import dao.ProveedorDAO;
+import model.Proveedor;
+import java.util.List;
+import java.util.Scanner;
+
+public class ProveedorView {
+    private ProveedorDAO proveedorDAO;
+    private Scanner scanner;
+
+    public ProveedorView(ProveedorDAO proveedorDAO, Scanner scanner) {
+        this.proveedorDAO = proveedorDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE PROVEEDORES ===");
+            System.out.println("1. Registrar proveedor");
+            System.out.println("2. Listar proveedores");
+            System.out.println("3. Buscar por ID");
+            System.out.println("4. Actualizar datos");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarProveedor(); break;
+                case 2: listarProveedores(); break;
+                case 3: buscarPorId(); break;
+                case 4: actualizarProveedor(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarProveedor() {
+        System.out.println("\n--- NUEVO PROVEEDOR ---");
+        System.out.print("Nombre: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Teléfono: ");
+        String telefono = scanner.nextLine();
+        
+        Proveedor proveedor = new Proveedor(0, nombre, telefono);
+        if(proveedorDAO.registrar(proveedor)) {
+            System.out.println("Proveedor registrado con ID: " + proveedor.getId());
+        } else {
+            System.out.println("Error al registrar proveedor");
+        }
+    }
+
+    private void listarProveedores() {
+        List<Proveedor> proveedores = proveedorDAO.listarTodos();
+        System.out.println("\n--- LISTADO DE PROVEEDORES ---");
+        System.out.printf("%-5s %-25s %-15s%n", "ID", "Nombre", "Teléfono");
+        for(Proveedor p : proveedores) {
+            System.out.printf("%-5d %-25s %-15s%n", 
+                p.getId(), p.getNombre(), p.getTelefono());
+        }
+    }
+
+    private void buscarPorId() {
+        System.out.print("\nIngrese ID del proveedor: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Proveedor proveedor = proveedorDAO.buscarPorId(id);
+        if(proveedor != null) {
+            System.out.println("\n--- DETALLES DEL PROVEEDOR ---");
+            System.out.println("ID: " + proveedor.getId());
+            System.out.println("Nombre: " + proveedor.getNombre());
+            System.out.println("Teléfono: " + proveedor.getTelefono());
+            System.out.println("Piezas suministradas: " + proveedorDAO.contarPiezas(id));
+        } else {
+            System.out.println("Proveedor no encontrado");
+        }
+    }
+
+    private void actualizarProveedor() {
+        System.out.print("\nIngrese ID del proveedor: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Proveedor proveedor = proveedorDAO.buscarPorId(id);
+        if(proveedor == null) {
+            System.out.println("Proveedor no encontrado");
+            return;
+        }
+        
+        System.out.print("Nuevo nombre (" + proveedor.getNombre() + "): ");
+        String nombre = scanner.nextLine();
+        if(!nombre.isEmpty()) proveedor.setNombre(nombre);
+        
+        System.out.print("Nuevo teléfono (" + proveedor.getTelefono() + "): ");
+        String telefono = scanner.nextLine();
+        if(!telefono.isEmpty()) proveedor.setTelefono(telefono);
+        
+        if(proveedorDAO.actualizar(proveedor)) {
+            System.out.println("Proveedor actualizado correctamente");
+        } else {
+            System.out.println("Error al actualizar proveedor");
+        }
+    }
+
+    private void generarReporte() {
+        List<Proveedor> proveedores = proveedorDAO.listarTodos();
+        System.out.println("\n--- REPORTE DE PROVEEDORES ---");
+        System.out.printf("%-5s %-25s %-15s %-10s%n", 
+            "ID", "Nombre", "Teléfono", "Piezas");
+        
+        for(Proveedor p : proveedores) {
+            System.out.printf("%-5d %-25s %-15s %-10d%n",
+                p.getId(), p.getNombre(), p.getTelefono(),
+                proveedorDAO.contarPiezas(p.getId()));
+        }
+        System.out.println("\nTotal proveedores: " + proveedores.size());
+    }
+}

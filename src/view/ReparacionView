@@ -1,0 +1,199 @@
+package view;
+
+import dao.*;
+import model.*;
+import java.util.List;
+import java.util.Scanner;
+
+public class ReparacionView {
+    private ReparacionDAO reparacionDAO;
+    private VehiculoDAO vehiculoDAO;
+    private MecanicoDAO mecanicoDAO;
+    private PiezaDAO piezaDAO;
+    private Scanner scanner;
+
+    public ReparacionView(ReparacionDAO reparacionDAO, VehiculoDAO vehiculoDAO, 
+                         MecanicoDAO mecanicoDAO, PiezaDAO piezaDAO, Scanner scanner) {
+        this.reparacionDAO = reparacionDAO;
+        this.vehiculoDAO = vehiculoDAO;
+        this.mecanicoDAO = mecanicoDAO;
+        this.piezaDAO = piezaDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE REPARACIONES ===");
+            System.out.println("1. Registrar reparación");
+            System.out.println("2. Listar reparaciones");
+            System.out.println("3. Buscar por ID");
+            System.out.println("4. Agregar pieza");
+            System.out.println("5. Finalizar reparación");
+            System.out.println("6. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarReparacion(); break;
+                case 2: listarReparaciones(); break;
+                case 3: buscarPorId(); break;
+                case 4: agregarPieza(); break;
+                case 5: finalizarReparacion(); break;
+                case 6: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarReparacion() {
+        System.out.println("\n--- NUEVA REPARACIÓN ---");
+        
+        // Seleccionar vehículo
+        System.out.println("\nVehículos disponibles:");
+        List<Vehiculo> vehiculos = vehiculoDAO.listarTodos();
+        for(Vehiculo v : vehiculos) {
+            System.out.println(v.getMatricula() + " - " + v.getMarca() + " " + v.getModelo());
+        }
+        System.out.print("Matrícula del vehículo: ");
+        String matricula = scanner.nextLine();
+        Vehiculo vehiculo = vehiculoDAO.buscarPorMatricula(matricula);
+        if(vehiculo == null) {
+            System.out.println("Vehículo no encontrado");
+            return;
+        }
+        
+        // Seleccionar mecánico
+        System.out.println("\nMecánicos disponibles:");
+        List<Mecanico> mecanicos = mecanicoDAO.listarTodos();
+        for(Mecanico m : mecanicos) {
+            System.out.println(m.getId() + " - " + m.getNombre() + " (" + m.getEspecialidad() + ")");
+        }
+        System.out.print("ID del mecánico: ");
+        int idMecanico = scanner.nextInt();
+        scanner.nextLine();
+        Mecanico mecanico = mecanicoDAO.buscarPorId(idMecanico);
+        if(mecanico == null) {
+            System.out.println("Mecánico no encontrado");
+            return;
+        }
+        
+        System.out.print("Descripción del problema: ");
+        String descripcion = scanner.nextLine();
+        
+        System.out.print("Fecha (dd/mm/aaaa): ");
+        String fecha = scanner.nextLine();
+        
+        Reparacion reparacion = new Reparacion(0, vehiculo, mecanico, descripcion, 0.0, fecha);
+        if(reparacionDAO.registrar(reparacion)) {
+            System.out.println("Reparación registrada con ID: " + reparacion.getId());
+        } else {
+            System.out.println("Error al registrar reparación");
+        }
+    }
+
+    private void listarReparaciones() {
+        List<Reparacion> reparaciones = reparacionDAO.listarTodas();
+        System.out.println("\n--- LISTADO DE REPARACIONES ---");
+        System.out.printf("%-5s %-12s %-15s %-20s %-10s %-15s%n", 
+            "ID", "Vehículo", "Mecánico", "Descripción", "Costo", "Fecha");
+        
+        for(Reparacion r : reparaciones) {
+            System.out.printf("%-5d %-12s %-15s %-20.20s %-10.2f %-15s%n",
+                r.getId(), r.getVehiculo().getMatricula(),
+                r.getEmpleado().getNombre(), 
+                r.getDescripcion(), r.getCosto(), r.getFecha());
+        }
+    }
+
+    private void buscarPorId() {
+        System.out.print("\nIngrese ID de reparación: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        Reparacion reparacion = reparacionDAO.buscarPorId(id);
+        if(reparacion != null) {
+            System.out.println("\n--- DETALLES DE REPARACIÓN ---");
+            System.out.println("ID: " + reparacion.getId());
+            System.out.println("Vehículo: " + reparacion.getVehiculo().getMarca() + " " + 
+                             reparacion.getVehiculo().getModelo() + " (" + 
+                             reparacion.getVehiculo().getMatricula() + ")");
+            System.out.println("Mecánico: " + reparacion.getEmpleado().getNombre() + 
+                             " (" + ((Mecanico)reparacion.getEmpleado()).getEspecialidad() + ")");
+            System.out.println("Fecha: " + reparacion.getFecha());
+            System.out.println("Descripción: " + reparacion.getDescripcion());
+            System.out.println("Costo total: " + reparacion.getCosto());
+            
+            System.out.println("\nPiezas utilizadas:");
+            for(Pieza p : reparacion.getPiezasUsadas()) {
+                System.out.println("- " + p.getNombre() + " (" + p.getPrecio() + "€)");
+            }
+        } else {
+            System.out.println("Reparación no encontrada");
+        }
+    }
+
+    private void agregarPieza() {
+        System.out.print("\nIngrese ID de reparación: ");
+        int idReparacion = scanner.nextInt();
+        scanner.nextLine();
+        
+        Reparacion reparacion = reparacionDAO.buscarPorId(idReparacion);
+        if(reparacion == null) {
+            System.out.println("Reparación no encontrada");
+            return;
+        }
+        
+        System.out.println("\nPiezas disponibles:");
+        List<Pieza> piezas = piezaDAO.listarDisponibles();
+        for(Pieza p : piezas) {
+            System.out.println(p.getId() + " - " + p.getNombre() + " (" + p.getPrecio() + "€)");
+        }
+        
+        System.out.print("ID de pieza a agregar: ");
+        int idPieza = scanner.nextInt();
+        scanner.nextLine();
+        
+        if(reparacionDAO.agregarPieza(idReparacion, idPieza)) {
+            System.out.println("Pieza agregada correctamente");
+        } else {
+            System.out.println("Error al agregar pieza");
+        }
+    }
+
+    private void finalizarReparacion() {
+        System.out.print("\nIngrese ID de reparación: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        
+        if(reparacionDAO.finalizar(id)) {
+            System.out.println("Reparación finalizada correctamente");
+        } else {
+            System.out.println("Error al finalizar reparación");
+        }
+    }
+
+    private void generarReporte() {
+        List<Reparacion> reparaciones = reparacionDAO.listarTodas();
+        System.out.println("\n--- REPORTE DE REPARACIONES ---");
+        System.out.printf("%-5s %-12s %-15s %-10s %-10s %-15s%n",
+            "ID", "Vehículo", "Mecánico", "Piezas", "Costo", "Fecha");
+        
+        double totalIngresos = 0;
+        for(Reparacion r : reparaciones) {
+            System.out.printf("%-5d %-12s %-15s %-10d %-10.2f %-15s%n",
+                r.getId(), r.getVehiculo().getMatricula(),
+                r.getEmpleado().getNombre(), 
+                r.getPiezasUsadas().size(),
+                r.getCosto(), r.getFecha());
+            totalIngresos += r.getCosto();
+        }
+        
+        System.out.println("\nTotal reparaciones: " + reparaciones.size());
+        System.out.printf("Total ingresos: %.2f€\n", totalIngresos);
+    }
+}
