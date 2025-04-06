@@ -7,7 +7,7 @@ public class Reparacion {
     private Empleado empleado;
     private String descripcion;
     private double costo;
-    private String fecha;  // Usamos String en lugar de Date
+    private String fecha;  
     private ArrayList<Pieza> piezasUsadas;
 
     public Reparacion(int id, Vehiculo vehiculo, Empleado empleado, 
