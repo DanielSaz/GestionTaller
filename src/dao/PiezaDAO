@@ -1,0 +1,159 @@
+package dao;
+
+import model.Pieza;
+import model.Proveedor;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PiezaDAO {
+    // Método para agregar una nueva pieza al inventario
+    public boolean agregarPieza(Pieza pieza) {
+        String sql = "INSERT INTO Piezas (id, nombre, precio, cantidad_stock, id_proveedor) VALUES (?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Establecer los parámetros en la consulta SQL
+            stmt.setInt(1, pieza.getId());
+            stmt.setString(2, pieza.getNombre());
+            stmt.setDouble(3, pieza.getPrecio());
+            stmt.setInt(4, pieza.getCantidadStock());
+            stmt.setInt(5, pieza.getProveedor().getId());
+            
+            // Ejecutar la inserción y retornar true si fue exitosa
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar pieza: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todas las piezas del inventario
+    public List<Pieza> obtenerTodasPiezas() {
+        List<Pieza> piezas = new ArrayList<>();
+        // Consulta SQL con JOIN para obtener datos del proveedor
+        String sql = "SELECT p.*, prov.nombre as nombre_proveedor, prov.telefono " +
+                     "FROM Piezas p JOIN Proveedores prov ON p.id_proveedor = prov.id";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            // Procesar cada fila del resultado
+            while (rs.next()) {
+                // Crear objeto Proveedor
+                Proveedor proveedor = new Proveedor(
+                    rs.getInt("id_proveedor"),
+                    rs.getString("nombre_proveedor"),
+                    rs.getString("telefono")
+                );
+                
+                // Crear objeto Pieza con su proveedor
+                Pieza pieza = new Pieza(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getDouble("precio"),
+                    rs.getInt("cantidad_stock"),
+                    proveedor
+                );
+                
+                piezas.add(pieza);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener piezas: " + e.getMessage());
+        }
+        
+        return piezas;
+    }
+
+    // Método para buscar una pieza por su ID
+    public Pieza buscarPiezaPorId(int id) {
+        String sql = "SELECT p.*, prov.nombre as nombre_proveedor, prov.telefono " +
+                     "FROM Piezas p JOIN Proveedores prov ON p.id_proveedor = prov.id " +
+                     "WHERE p.id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Proveedor proveedor = new Proveedor(
+                        rs.getInt("id_proveedor"),
+                        rs.getString("nombre_proveedor"),
+                        rs.getString("telefono")
+                    );
+                    
+                    return new Pieza(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getDouble("precio"),
+                        rs.getInt("cantidad_stock"),
+                        proveedor
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar pieza: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar el stock de una pieza
+    public boolean actualizarStock(int idPieza, int nuevoStock) {
+        String sql = "UPDATE Piezas SET cantidad_stock = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, nuevoStock);
+            stmt.setInt(2, idPieza);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar stock: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener piezas con stock bajo (menos de 5 unidades)
+    public List<Pieza> obtenerPiezasConStockBajo() {
+        List<Pieza> piezas = new ArrayList<>();
+        String sql = "SELECT p.*, prov.nombre as nombre_proveedor, prov.telefono " +
+                     "FROM Piezas p JOIN Proveedores prov ON p.id_proveedor = prov.id " +
+                     "WHERE p.cantidad_stock < 5";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Proveedor proveedor = new Proveedor(
+                    rs.getInt("id_proveedor"),
+                    rs.getString("nombre_proveedor"),
+                    rs.getString("telefono")
+                );
+                
+                Pieza pieza = new Pieza(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getDouble("precio"),
+                    rs.getInt("cantidad_stock"),
+                    proveedor
+                );
+                
+                piezas.add(pieza);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener piezas con stock bajo: " + e.getMessage());
+        }
+        
+        return piezas;
+    }
+}

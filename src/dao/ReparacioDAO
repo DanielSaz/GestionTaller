@@ -1,0 +1,233 @@
+package dao;
+
+import model.*;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ReparacionDAO {
+    // Método para registrar una nueva reparación
+    public boolean agregarReparacion(Reparacion reparacion) {
+        String sql = "INSERT INTO Reparaciones (id, matricula_vehiculo, id_mecanico, descripcion, costo, fecha) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Establecer parámetros en la consulta SQL
+            stmt.setInt(1, reparacion.getId());
+            stmt.setString(2, reparacion.getVehiculo().getMatricula());
+            stmt.setInt(3, reparacion.getEmpleado().getId());
+            stmt.setString(4, reparacion.getDescripcion());
+            stmt.setDouble(5, reparacion.getCosto());
+            stmt.setString(6, reparacion.getFecha());
+            
+            // Ejecutar inserción y retornar true si fue exitosa
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar reparación: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para agregar una pieza a una reparación
+    public boolean agregarPiezaAReparacion(int idReparacion, int idPieza, int cantidad) {
+        String sql = "INSERT INTO PiezasReparaciones (id_reparacion, id_pieza, cantidad) VALUES (?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idReparacion);
+            stmt.setInt(2, idPieza);
+            stmt.setInt(3, cantidad);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al agregar pieza a reparación: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todas las reparaciones
+    public List<Reparacion> obtenerTodasReparaciones() {
+        List<Reparacion> reparaciones = new ArrayList<>();
+        // Consulta compleja con múltiples JOINs para obtener todos los datos relacionados
+        String sql = "SELECT r.*, v.marca, v.modelo, c.nombre as nombre_cliente, " +
+                    "e.nombre as nombre_mecanico, e.especialidad " +
+                    "FROM Reparaciones r " +
+                    "JOIN Vehiculos v ON r.matricula_vehiculo = v.matricula " +
+                    "JOIN Clientes c ON v.id_propietario = c.id " +
+                    "JOIN Empleados e ON r.id_mecanico = e.id";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                // Crear objeto Cliente (propietario del vehículo)
+                Cliente cliente = new Cliente(
+                    -1, // ID no disponible en esta consulta
+                    rs.getString("nombre_cliente"),
+                    null
+                );
+                
+                // Crear objeto Vehiculo
+                Vehiculo vehiculo = new Vehiculo(
+                    rs.getString("matricula_vehiculo"),
+                    rs.getString("marca"),
+                    rs.getString("modelo"),
+                    cliente
+                );
+                
+                // Crear objeto Mecanico
+                Mecanico mecanico = new Mecanico(
+                    rs.getInt("id_mecanico"),
+                    rs.getString("nombre_mecanico"),
+                    "Mecánico", // Puesto hardcodeado
+                    rs.getString("especialidad")
+                );
+                
+                // Crear objeto Reparacion
+                Reparacion reparacion = new Reparacion(
+                    rs.getInt("id"),
+                    vehiculo,
+                    mecanico,
+                    rs.getString("descripcion"),
+                    rs.getDouble("costo"),
+                    rs.getString("fecha")
+                );
+                
+                reparaciones.add(reparacion);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener reparaciones: " + e.getMessage());
+        }
+        
+        return reparaciones;
+    }
+
+    // Método para buscar una reparación por su ID
+    public Reparacion buscarReparacionPorId(int id) {
+        String sql = "SELECT r.*, v.marca, v.modelo, c.id as id_cliente, c.nombre as nombre_cliente, " +
+                    "c.telefono, e.nombre as nombre_mecanico, e.especialidad " +
+                    "FROM Reparaciones r " +
+                    "JOIN Vehiculos v ON r.matricula_vehiculo = v.matricula " +
+                    "JOIN Clientes c ON v.id_propietario = c.id " +
+                    "JOIN Empleados e ON r.id_mecanico = e.id " +
+                    "WHERE r.id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Crear objeto Cliente
+                    Cliente cliente = new Cliente(
+                        rs.getInt("id_cliente"),
+                        rs.getString("nombre_cliente"),
+                        rs.getString("telefono")
+                    );
+                    
+                    // Crear objeto Vehiculo
+                    Vehiculo vehiculo = new Vehiculo(
+                        rs.getString("matricula_vehiculo"),
+                        rs.getString("marca"),
+                        rs.getString("modelo"),
+                        cliente
+                    );
+                    
+                    // Crear objeto Mecanico
+                    Mecanico mecanico = new Mecanico(
+                        rs.getInt("id_mecanico"),
+                        rs.getString("nombre_mecanico"),
+                        "Mecánico",
+                        rs.getString("especialidad")
+                    );
+                    
+                    // Crear objeto Reparacion
+                    Reparacion reparacion = new Reparacion(
+                        rs.getInt("id"),
+                        vehiculo,
+                        mecanico,
+                        rs.getString("descripcion"),
+                        rs.getDouble("costo"),
+                        rs.getString("fecha")
+                    );
+                    
+                    // Obtener piezas asociadas a esta reparación
+                    List<Pieza> piezas = obtenerPiezasDeReparacion(id, conn);
+                    for (Pieza pieza : piezas) {
+                        reparacion.agregarPieza(pieza);
+                    }
+                    
+                    return reparacion;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar reparación: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método auxiliar para obtener las piezas de una reparación
+    private List<Pieza> obtenerPiezasDeReparacion(int idReparacion, Connection conn) throws SQLException {
+        List<Pieza> piezas = new ArrayList<>();
+        String sql = "SELECT p.*, pr.cantidad, prov.nombre as nombre_proveedor " +
+                    "FROM Piezas p " +
+                    "JOIN PiezasReparaciones pr ON p.id = pr.id_pieza " +
+                    "JOIN Proveedores prov ON p.id_proveedor = prov.id " +
+                    "WHERE pr.id_reparacion = ?";
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idReparacion);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // Crear objeto Proveedor
+                    Proveedor proveedor = new Proveedor(
+                        rs.getInt("id_proveedor"),
+                        rs.getString("nombre_proveedor"),
+                        null // No tenemos el teléfono en esta consulta
+                    );
+                    
+                    // Crear objeto Pieza
+                    Pieza pieza = new Pieza(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getDouble("precio"),
+                        rs.getInt("cantidad"), // Cantidad usada en esta reparación
+                        proveedor
+                    );
+                    
+                    piezas.add(pieza);
+                }
+            }
+        }
+        
+        return piezas;
+    }
+
+    // Método para finalizar una reparación (actualizar estado y costo)
+    public boolean finalizarReparacion(int idReparacion, double costoFinal) {
+        String sql = "UPDATE Reparaciones SET estado = 'FINALIZADA', costo = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setDouble(1, costoFinal);
+            stmt.setInt(2, idReparacion);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al finalizar reparación: " + e.getMessage());
+            return false;
+        }
+    }
+}

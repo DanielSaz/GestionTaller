@@ -1,0 +1,99 @@
+package dao;
+
+import model.Cliente;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ClienteDAO {
+    // Método para agregar un cliente a la base de datos
+    public boolean agregarCliente(Cliente cliente) {
+        String sql = "INSERT INTO Clientes (id, nombre, telefono) VALUES (?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Establecer parámetros en la consulta SQL
+            stmt.setInt(1, cliente.getId());
+            stmt.setString(2, cliente.getNombre());
+            stmt.setString(3, cliente.getTelefono());
+            
+            // Ejecutar la inserción
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar cliente: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los clientes
+    public List<Cliente> obtenerTodosClientes() {
+        List<Cliente> clientes = new ArrayList<>();
+        String sql = "SELECT * FROM Clientes";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            // Recorrer el resultado y crear objetos Cliente
+            while (rs.next()) {
+                Cliente cliente = new Cliente(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono")
+                );
+                clientes.add(cliente);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener clientes: " + e.getMessage());
+        }
+        
+        return clientes;
+    }
+
+    // Método para buscar cliente por ID
+    public Cliente buscarClientePorId(int id) {
+        String sql = "SELECT * FROM Clientes WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Cliente(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("telefono")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar cliente: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar teléfono de un cliente
+    public boolean actualizarTelefonoCliente(int id, String nuevoTelefono) {
+        String sql = "UPDATE Clientes SET telefono = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nuevoTelefono);
+            stmt.setInt(2, id);
+            
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar teléfono: " + e.getMessage());
+            return false;
+        }
+    }
+}

@@ -1,0 +1,72 @@
+package dao;
+
+import model.Mecanico;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MecanicoDAO {
+    // Método para agregar un mecánico
+    public boolean agregarMecanico(Mecanico mecanico) {
+        String sql = "INSERT INTO Empleados (id, nombre, puesto, especialidad) VALUES (?, ?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, mecanico.getId());
+            stmt.setString(2, mecanico.getNombre());
+            stmt.setString(3, mecanico.getPuesto());
+            stmt.setString(4, mecanico.getEspecialidad());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar mecánico: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los mecánicos
+    public List<Mecanico> obtenerTodosMecanicos() {
+        List<Mecanico> mecanicos = new ArrayList<>();
+        String sql = "SELECT * FROM Empleados WHERE especialidad IS NOT NULL";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Mecanico mecanico = new Mecanico(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getString("puesto"),
+                    rs.getString("especialidad")
+                );
+                mecanicos.add(mecanico);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener mecánicos: " + e.getMessage());
+        }
+        
+        return mecanicos;
+    }
+
+    // Método para actualizar especialidad de un mecánico
+    public boolean actualizarEspecialidad(int id, String nuevaEspecialidad) {
+        String sql = "UPDATE Empleados SET especialidad = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nuevaEspecialidad);
+            stmt.setInt(2, id);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar especialidad: " + e.getMessage());
+            return false;
+        }
+    }
+}

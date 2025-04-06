@@ -1,0 +1,118 @@
+package dao;
+
+import model.Proveedor;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProveedorDAO {
+    // Método para agregar un nuevo proveedor
+    public boolean agregarProveedor(Proveedor proveedor) {
+        String sql = "INSERT INTO Proveedores (id, nombre, telefono) VALUES (?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Establecer parámetros en la consulta SQL
+            stmt.setInt(1, proveedor.getId());
+            stmt.setString(2, proveedor.getNombre());
+            stmt.setString(3, proveedor.getTelefono());
+            
+            // Ejecutar inserción y retornar true si fue exitosa
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar proveedor: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los proveedores
+    public List<Proveedor> obtenerTodosProveedores() {
+        List<Proveedor> proveedores = new ArrayList<>();
+        String sql = "SELECT * FROM Proveedores";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            // Procesar cada fila del resultado
+            while (rs.next()) {
+                Proveedor proveedor = new Proveedor(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono")
+                );
+                proveedores.add(proveedor);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener proveedores: " + e.getMessage());
+        }
+        
+        return proveedores;
+    }
+
+    // Método para buscar un proveedor por su ID
+    public Proveedor buscarProveedorPorId(int id) {
+        String sql = "SELECT * FROM Proveedores WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Proveedor(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("telefono")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar proveedor: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar los datos de un proveedor
+    public boolean actualizarProveedor(Proveedor proveedor) {
+        String sql = "UPDATE Proveedores SET nombre = ?, telefono = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, proveedor.getNombre());
+            stmt.setString(2, proveedor.getTelefono());
+            stmt.setInt(3, proveedor.getId());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar proveedor: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para eliminar un proveedor (solo si no tiene piezas asociadas)
+    public boolean eliminarProveedor(int id) {
+        String sql = "DELETE FROM Proveedores WHERE id = ? AND " +
+                    "NOT EXISTS (SELECT 1 FROM Piezas WHERE id_proveedor = ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            stmt.setInt(2, id);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar proveedor: " + e.getMessage());
+            return false;
+        }
+    }
+}

@@ -1,0 +1,158 @@
+package view;
+
+import dao.ClienteDAO;
+import dao.VehiculoDAO;
+import model.Cliente;
+import model.Vehiculo;
+import java.util.List;
+import java.util.Scanner;
+
+public class VehiculoView {
+    private VehiculoDAO vehiculoDAO;
+    private ClienteDAO clienteDAO;
+    private Scanner scanner;
+
+    public VehiculoView(VehiculoDAO vehiculoDAO, ClienteDAO clienteDAO, Scanner scanner) {
+        this.vehiculoDAO = vehiculoDAO;
+        this.clienteDAO = clienteDAO;
+        this.scanner = scanner;
+    }
+
+    public void mostrarMenu() {
+        int opcion;
+        do {
+            System.out.println("\n=== GESTIÓN DE VEHÍCULOS ===");
+            System.out.println("1. Registrar vehículo");
+            System.out.println("2. Listar vehículos");
+            System.out.println("3. Buscar por matrícula");
+            System.out.println("4. Reasignar propietario");
+            System.out.println("5. Generar reporte");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione: ");
+            
+            opcion = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch(opcion) {
+                case 1: registrarVehiculo(); break;
+                case 2: listarVehiculos(); break;
+                case 3: buscarPorMatricula(); break;
+                case 4: reasignarPropietario(); break;
+                case 5: generarReporte(); break;
+                case 0: break;
+                default: System.out.println("Opción inválida");
+            }
+        } while(opcion != 0);
+    }
+
+    private void registrarVehiculo() {
+        System.out.println("\n--- REGISTRAR VEHÍCULO ---");
+        System.out.print("Matrícula: ");
+        String matricula = scanner.nextLine();
+        
+        System.out.print("Marca: ");
+        String marca = scanner.nextLine();
+        
+        System.out.print("Modelo: ");
+        String modelo = scanner.nextLine();
+        
+        System.out.println("\n--- SELECCIONAR PROPIETARIO ---");
+        List<Cliente> clientes = clienteDAO.listarTodos();
+        for(Cliente c : clientes) {
+            System.out.println(c.getId() + " - " + c.getNombre());
+        }
+        
+        System.out.print("ID del propietario: ");
+        int idCliente = scanner.nextInt();
+        scanner.nextLine();
+        
+        Cliente propietario = clienteDAO.buscarPorId(idCliente);
+        if(propietario == null) {
+            System.out.println("Cliente no encontrado");
+            return;
+        }
+        
+        Vehiculo vehiculo = new Vehiculo(matricula, marca, modelo, propietario);
+        if(vehiculoDAO.registrar(vehiculo)) {
+            System.out.println("Vehículo registrado exitosamente");
+        } else {
+            System.out.println("Error al registrar vehículo");
+        }
+    }
+
+    private void listarVehiculos() {
+        List<Vehiculo> vehiculos = vehiculoDAO.listarTodos();
+        System.out.println("\n--- LISTADO DE VEHÍCULOS ---");
+        System.out.printf("%-10s %-15s %-15s %-20s%n", "Matrícula", "Marca", "Modelo", "Propietario");
+        for(Vehiculo v : vehiculos) {
+            System.out.printf("%-10s %-15s %-15s %-20s%n",
+                v.getMatricula(), v.getMarca(), v.getModelo(), 
+                v.getPropietario().getNombre());
+        }
+    }
+
+    private void buscarPorMatricula() {
+        System.out.print("\nIngrese matrícula: ");
+        String matricula = scanner.nextLine();
+        
+        Vehiculo vehiculo = vehiculoDAO.buscarPorMatricula(matricula);
+        if(vehiculo != null) {
+            System.out.println("\n--- DETALLES DEL VEHÍCULO ---");
+            System.out.println("Matrícula: " + vehiculo.getMatricula());
+            System.out.println("Marca: " + vehiculo.getMarca());
+            System.out.println("Modelo: " + vehiculo.getModelo());
+            System.out.println("Propietario: " + vehiculo.getPropietario().getNombre());
+            System.out.println("Reparaciones: " + vehiculo.getHistorialReparaciones().size());
+        } else {
+            System.out.println("Vehículo no encontrado");
+        }
+    }
+
+    private void reasignarPropietario() {
+        System.out.print("\nIngrese matrícula del vehículo: ");
+        String matricula = scanner.nextLine();
+        
+        Vehiculo vehiculo = vehiculoDAO.buscarPorMatricula(matricula);
+        if(vehiculo == null) {
+            System.out.println("Vehículo no encontrado");
+            return;
+        }
+        
+        System.out.println("\n--- NUEVO PROPIETARIO ---");
+        List<Cliente> clientes = clienteDAO.listarTodos();
+        for(Cliente c : clientes) {
+            System.out.println(c.getId() + " - " + c.getNombre());
+        }
+        
+        System.out.print("ID del nuevo propietario: ");
+        int nuevoId = scanner.nextInt();
+        scanner.nextLine();
+        
+        Cliente nuevoPropietario = clienteDAO.buscarPorId(nuevoId);
+        if(nuevoPropietario == null) {
+            System.out.println("Cliente no encontrado");
+            return;
+        }
+        
+        if(vehiculoDAO.reasignarPropietario(matricula, nuevoId)) {
+            System.out.println("Propietario actualizado correctamente");
+        } else {
+            System.out.println("Error al actualizar propietario");
+        }
+    }
+
+    private void generarReporte() {
+        List<Vehiculo> vehiculos = vehiculoDAO.listarTodos();
+        System.out.println("\n--- REPORTE DE VEHÍCULOS ---");
+        System.out.printf("%-10s %-15s %-15s %-20s %-10s%n", 
+            "Matrícula", "Marca", "Modelo", "Propietario", "Reparaciones");
+        
+        for(Vehiculo v : vehiculos) {
+            System.out.printf("%-10s %-15s %-15s %-20s %-10d%n",
+                v.getMatricula(), v.getMarca(), v.getModelo(),
+                v.getPropietario().getNombre(), v.getHistorialReparaciones().size());
+        }
+        System.out.println("\nTotal vehículos: " + vehiculos.size());
+    }
+}
+
