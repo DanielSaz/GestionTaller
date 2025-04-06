@@ -1,0 +1,95 @@
+package dao;
+
+import model.Empleado;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EmpleadoDAO {
+    // Método para agregar un empleado
+    public boolean agregarEmpleado(Empleado empleado) {
+        String sql = "INSERT INTO Empleados (id, nombre, puesto) VALUES (?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, empleado.getId());
+            stmt.setString(2, empleado.getNombre());
+            stmt.setString(3, empleado.getPuesto());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar empleado: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los empleados
+    public List<Empleado> obtenerTodosEmpleados() {
+        List<Empleado> empleados = new ArrayList<>();
+        String sql = "SELECT * FROM Empleados";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                Empleado empleado = new Empleado(
+                    rs.getInt("id"),
+                    rs.getString("nombre"),
+                    rs.getString("puesto")
+                );
+                empleados.add(empleado);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener empleados: " + e.getMessage());
+        }
+        
+        return empleados;
+    }
+
+    // Método para buscar empleado por ID
+    public Empleado buscarEmpleadoPorId(int id) {
+        String sql = "SELECT * FROM Empleados WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Empleado(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("puesto")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar empleado: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar datos de empleado
+    public boolean actualizarEmpleado(Empleado empleado) {
+        String sql = "UPDATE Empleados SET nombre = ?, puesto = ? WHERE id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, empleado.getNombre());
+            stmt.setString(2, empleado.getPuesto());
+            stmt.setInt(3, empleado.getId());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar empleado: " + e.getMessage());
+            return false;
+        }
+    }
+}

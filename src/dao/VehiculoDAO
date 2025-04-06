@@ -1,0 +1,114 @@
+package dao;
+
+import model.Vehiculo;
+import util.DBUtil;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class VehiculoDAO {
+    // Método para agregar un vehículo
+    public boolean agregarVehiculo(Vehiculo vehiculo) {
+        String sql = "INSERT INTO Vehiculos (matricula, marca, modelo, id_propietario) VALUES (?, ?, ?, ?)";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, vehiculo.getMatricula());
+            stmt.setString(2, vehiculo.getMarca());
+            stmt.setString(3, vehiculo.getModelo());
+            stmt.setInt(4, vehiculo.getPropietario().getId());
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al insertar vehículo: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método para obtener todos los vehículos
+    public List<Vehiculo> obtenerTodosVehiculos() {
+        List<Vehiculo> vehiculos = new ArrayList<>();
+        String sql = "SELECT v.*, c.nombre as nombre_propietario FROM Vehiculos v " +
+                     "JOIN Clientes c ON v.id_propietario = c.id";
+        
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                // Crear objeto propietario básico (solo con id y nombre)
+                Cliente propietario = new Cliente(
+                    rs.getInt("id_propietario"),
+                    rs.getString("nombre_propietario"),
+                    null // No cargamos el teléfono para esta consulta
+                );
+                
+                Vehiculo vehiculo = new Vehiculo(
+                    rs.getString("matricula"),
+                    rs.getString("marca"),
+                    rs.getString("modelo"),
+                    propietario
+                );
+                
+                vehiculos.add(vehiculo);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener vehículos: " + e.getMessage());
+        }
+        
+        return vehiculos;
+    }
+
+    // Método para buscar vehículo por matrícula
+    public Vehiculo buscarVehiculoPorMatricula(String matricula) {
+        String sql = "SELECT v.*, c.nombre as nombre_propietario, c.telefono " +
+                     "FROM Vehiculos v JOIN Clientes c ON v.id_propietario = c.id " +
+                     "WHERE v.matricula = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, matricula);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Cliente propietario = new Cliente(
+                        rs.getInt("id_propietario"),
+                        rs.getString("nombre_propietario"),
+                        rs.getString("telefono")
+                    );
+                    
+                    return new Vehiculo(
+                        rs.getString("matricula"),
+                        rs.getString("marca"),
+                        rs.getString("modelo"),
+                        propietario
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar vehículo: " + e.getMessage());
+        }
+        
+        return null;
+    }
+
+    // Método para actualizar propietario de un vehículo
+    public boolean actualizarPropietario(String matricula, int nuevoIdPropietario) {
+        String sql = "UPDATE Vehiculos SET id_propietario = ? WHERE matricula = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, nuevoIdPropietario);
+            stmt.setString(2, matricula);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar propietario: " + e.getMessage());
+            return false;
+        }
+    }
+}
